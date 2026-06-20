@@ -24,7 +24,7 @@ export const createCheckoutSession = asyncHandler(async (req, res) => {
     const mockSessionId = `mock_sess_${Date.now()}`;
     return res.status(200).json({
       success: true,
-      url: `${clientUrl}/#/payment?session_id=${mockSessionId}&mock=true`,
+      url: `${clientUrl}/payment?session_id=${mockSessionId}&mock=true`,
       sessionId: mockSessionId,
       isMock: true
     });
@@ -36,7 +36,7 @@ export const createCheckoutSession = asyncHandler(async (req, res) => {
       line_items: [
         {
           price_data: {
-            currency: 'cad',
+            currency: 'usd',
             product_data: {
               name: planName,
               description: 'Access unlimited open position postings on StartupForge.'
@@ -48,8 +48,8 @@ export const createCheckoutSession = asyncHandler(async (req, res) => {
       ],
       mode: 'payment',
       customer_email: req.user.email,
-      success_url: `${clientUrl}/#/payment?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${clientUrl}/#/payment?canceled=true`
+      success_url: `${clientUrl}/payment?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${clientUrl}/payment?canceled=true`
     });
 
     res.status(200).json({
