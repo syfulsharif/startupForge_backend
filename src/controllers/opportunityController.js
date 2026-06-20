@@ -75,9 +75,12 @@ export const getOpportunities = asyncHandler(async (req, res) => {
     ];
   }
 
-  // Filter by workType
+  // Filter by workType (uses MongoDB $in as per requirements)
   if (workType && workType !== 'All') {
-    query.work_type = workType;
+    const workTypes = Array.isArray(workType) 
+      ? workType 
+      : workType.split(',').map(w => w.trim());
+    query.work_type = { $in: workTypes };
   }
 
   // Filter by commitment

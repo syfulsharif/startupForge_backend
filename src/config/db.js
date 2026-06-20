@@ -5,6 +5,10 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const connectDB = async () => {
+  if (mongoose.connection.readyState >= 1) {
+    console.log('[MongoDB] Using existing database connection');
+    return;
+  }
   try {
     const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/startupforge');
     console.log(`[MongoDB] Connected successfully to host: ${conn.connection.host}`);

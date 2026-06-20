@@ -1,6 +1,8 @@
 import Startup from '../models/Startup.js';
 import Opportunity from '../models/Opportunity.js';
 import asyncHandler from '../utils/asyncHandler.js';
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
 
 // @desc    Create a startup profile
 // @route   POST /api/startups
@@ -40,9 +42,28 @@ export const createStartup = asyncHandler(async (req, res) => {
 // @access  Public
 export const getStartups = asyncHandler(async (req, res) => {
   const filter = {};
+  let userRole = 'public';
+
+  // Extract token manually since this route is public
+  let token = null;
+  if (req.cookies && req.cookies.token) {
+    token = req.cookies.token;
+  } else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'super_secret_jwt_key_change_me_in_production');
+      const user = await User.findById(decoded.id);
+      if (user) userRole = user.role;
+    } catch (e) {
+      // Ignore token errors for public routes
+    }
+  }
   
   // By default, public list only shows approved startups
-  if (!req.query.all || req.user?.role !== 'admin') {
+  if (!req.query.all || userRole !== 'admin') {
     filter.status = 'approved';
   }
 
