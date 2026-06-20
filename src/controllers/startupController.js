@@ -8,7 +8,7 @@ import User from '../models/User.js';
 // @route   POST /api/startups
 // @access  Private (Founder only)
 export const createStartup = asyncHandler(async (req, res) => {
-  const { name, logo, industry, description, fundingStage, location, website, pitch } = req.body;
+  const { name, logo, industry, description, fundingStage, location, website, pitch, teamSizeNeeded } = req.body;
 
   if (!name || !description || !industry) {
     return res.status(400).json({ success: false, message: 'Startup name, industry, and description are required.' });
@@ -27,6 +27,7 @@ export const createStartup = asyncHandler(async (req, res) => {
     location: location || 'Remote',
     website: website || '',
     pitch: pitch || '',
+    teamSizeNeeded: teamSizeNeeded || 1,
     status: 'pending' // Admins approve startups
   });
 
@@ -107,7 +108,7 @@ export const updateStartup = asyncHandler(async (req, res) => {
     return res.status(403).json({ success: false, message: 'Unauthorized. You do not own this startup.' });
   }
 
-  const { name, logo, industry, description, fundingStage, location, website, pitch } = req.body;
+  const { name, logo, industry, description, fundingStage, location, website, pitch, teamSizeNeeded } = req.body;
 
   if (name) startup.startup_name = name;
   if (logo) startup.logo = logo;
@@ -117,6 +118,7 @@ export const updateStartup = asyncHandler(async (req, res) => {
   if (location) startup.location = location;
   if (website) startup.website = website;
   if (pitch) startup.pitch = pitch;
+  if (teamSizeNeeded !== undefined) startup.teamSizeNeeded = teamSizeNeeded;
 
   // Save changes
   await startup.save();

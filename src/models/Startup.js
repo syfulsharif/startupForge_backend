@@ -51,6 +51,10 @@ const startupSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  teamSizeNeeded: {
+    type: Number,
+    default: 1
+  },
   status: {
     type: String,
     enum: ['pending', 'approved'],
