@@ -10,14 +10,16 @@ const connectDB = async () => {
     return;
   }
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/startupforge');
+    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/startupforge', {
+      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+    });
     console.log(`[MongoDB] Connected successfully to host: ${conn.connection.host}`);
     
     // Seed Database if empty
     await seedDatabase();
   } catch (error) {
     console.error(`[MongoDB] Connection error: ${error.message}`);
-    process.exit(1);
+    throw error;
   }
 };
 

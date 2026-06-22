@@ -16,6 +16,7 @@ import adminRoutes from './routes/adminRoutes.js';
 
 // Middlewares
 import errorHandler from './middleware/error.js';
+import connectDB from './config/db.js';
 
 const app = express();
 
@@ -69,6 +70,35 @@ if (!fs.existsSync(uploadDir)) {
 
 // Serve uploaded avatars/images statically
 app.use('/uploads', express.static(path.resolve(uploadDir)));
+
+// Health check route - bypasses DB connection check to verify if the server is up and env vars are loaded
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    status: 'UP',
+    env: {
+      NODE_ENV: process.env.NODE_ENV,
+      CLIENT_URL: process.env.CLIENT_URL,
+      HAS_MONGODB_URI: !!process.env.MONGODB_URI,
+      MONGODB_URI_PREFIX: process.env.MONGODB_URI ? process.env.MONGODB_URI.substring(0, 30) + '...' : null,
+      BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
+    }
+  });
+});
+
+// Database connection middleware (ensures connection is ready before handling requests)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error('[Database Connection Middleware Error]:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Database connection failed. Please check if your MongoDB Atlas IP Whitelist is configured to allow access from anywhere (0.0.0.0/0).',
+      error: error.message
+    });
+  }
+});
 
 // Mount API Routes
 app.use('/api/auth', authRoutes);

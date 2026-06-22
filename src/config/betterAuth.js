@@ -5,7 +5,10 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const client = new MongoClient(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/startupforge');
+const client = new MongoClient(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/startupforge', {
+    serverSelectionTimeoutMS: 5000,
+    connectTimeoutMS: 5000,
+});
 const db = client.db();
 
 export const auth = betterAuth({
