@@ -78,6 +78,10 @@ app.use('/api/applications', applicationRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 
+import { toNodeHandler } from "better-auth/node";
+import { auth } from "./config/betterAuth.js";
+app.all("/api/better-auth/*", toNodeHandler(auth));
+
 // Fallback 404 handler for invalid routes
 app.use((req, res, next) => {
   res.status(404).json({
