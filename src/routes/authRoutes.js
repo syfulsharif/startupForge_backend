@@ -2,8 +2,8 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import { register, login, googleLogin, logout, getMe, updateProfile } from '../controllers/authController.js';
-import { protect } from '../middleware/auth.js';
+import { register, login, googleLogin, logout, getMe, updateProfile, getFounderStats } from '../controllers/authController.js';
+import { protect, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -43,5 +43,6 @@ router.post('/google', googleLogin);
 router.post('/logout', logout);
 router.get('/me', protect, getMe);
 router.put('/profile', protect, updateProfile);
+router.get('/founder-stats', protect, authorize('founder', 'admin'), getFounderStats);
 
 export default router;

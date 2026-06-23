@@ -145,6 +145,10 @@ export const deleteStartup = asyncHandler(async (req, res) => {
     return res.status(403).json({ success: false, message: 'Unauthorized. You cannot delete this profile.' });
   }
 
+  // Delete all applications submitted for opportunities under this startup
+  const Application = (await import('../models/Application.js')).default;
+  await Application.deleteMany({ startupId: startup._id });
+
   // Delete all opportunities under this startup
   await Opportunity.deleteMany({ startup_id: startup._id });
 
@@ -154,5 +158,18 @@ export const deleteStartup = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     message: 'Startup profile and associated vacancies deleted successfully.'
+  });
+});
+
+// @desc    Get founder's own startups
+// @route   GET /api/startups/my
+// @access  Private (Founder only)
+export const getMyStartups = asyncHandler(async (req, res) => {
+  const startups = await Startup.find({ founderId: req.user.id }).sort({ createdAt: -1 });
+
+  res.status(200).json({
+    success: true,
+    count: startups.length,
+    startups
   });
 });

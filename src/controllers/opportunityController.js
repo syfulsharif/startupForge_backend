@@ -201,3 +201,19 @@ export const deleteOpportunity = asyncHandler(async (req, res) => {
     message: 'Opportunity vacancy and associated applications deleted.'
   });
 });
+
+// @desc    Get founder's own opportunities
+// @route   GET /api/opportunities/my
+// @access  Private (Founder only)
+export const getMyOpportunities = asyncHandler(async (req, res) => {
+  const myStartups = await Startup.find({ founderId: req.user.id });
+  const myStartupIds = myStartups.map(s => s._id);
+
+  const opportunities = await Opportunity.find({ startup_id: { $in: myStartupIds } }).sort({ createdAt: -1 });
+
+  res.status(200).json({
+    success: true,
+    count: opportunities.length,
+    opportunities
+  });
+});

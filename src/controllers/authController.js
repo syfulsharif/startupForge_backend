@@ -130,7 +130,7 @@ export const login = asyncHandler(async (req, res) => {
 // @route   POST /api/auth/google
 // @access  Public
 export const googleLogin = asyncHandler(async (req, res) => {
-  const { email, name, image } = req.body;
+  const { email, name, image, role } = req.body;
 
   if (!email || !name) {
     return res.status(400).json({ success: false, message: 'Google sign-in missing profile details.' });
@@ -145,9 +145,10 @@ export const googleLogin = asyncHandler(async (req, res) => {
     // Update name/image if changed
     user.name = name;
     if (image) user.image = image;
+    if (role) user.role = role;
     await user.save();
   } else {
-    // Create new collaborator profile by default for Google signup
+    // Create new profile with custom role
     const randomPassword = Math.random().toString(36).slice(-8) + 'A1';
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(randomPassword, salt);
@@ -156,7 +157,7 @@ export const googleLogin = asyncHandler(async (req, res) => {
       name,
       email: email.toLowerCase(),
       password: hashedPassword,
-      role: 'collaborator',
+      role: role || 'collaborator',
       image: image || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
       isBlocked: false,
       bio: 'Registered via Google OAuth.',
@@ -246,6 +247,40 @@ export const updateProfile = asyncHandler(async (req, res) => {
       experience: user.experience,
       isPremium: user.isPremium,
       createdAt: user.createdAt
+    }
+  });
+});
+
+// @desc    Get founder dashboard overview statistics
+// @route   GET /api/auth/founder-stats
+// @access  Private (Founder only)
+export const getFounderStats = asyncHandler(async (req, res) => {
+  const Startup = (await import('../models/Startup.js')).default;
+  const Opportunity = (await import('../models/Opportunity.js')).default;
+  const Application = (await import('../models/Application.js')).default;
+
+  // 1. Find all startups owned by this founder
+  const myStartups = await Startup.find({ founderId: req.user.id });
+  const myStartupIds = myStartups.map(s => s._id);
+
+  // 2. Total Opportunities posted by these startups
+  const totalOpportunities = await Opportunity.countDocuments({ startup_id: { $in: myStartupIds } });
+
+  // 3. Total Applications received for these startups
+  const totalApplications = await Application.countDocuments({ startupId: { $in: myStartupIds } });
+
+  // 4. Accepted Members (applications with status 'Accepted' for these startups)
+  const acceptedMembers = await Application.countDocuments({ 
+    startupId: { $in: myStartupIds },
+    status: 'Accepted'
+  });
+
+  res.status(200).json({
+    success: true,
+    stats: {
+      totalOpportunities,
+      totalApplications,
+      acceptedMembers
     }
   });
 });

@@ -3,6 +3,7 @@ import User from '../models/User.js';
 import Startup from '../models/Startup.js';
 import Opportunity from '../models/Opportunity.js';
 import Payment from '../models/Payment.js';
+import Application from '../models/Application.js';
 import { protect, authorize } from '../middleware/auth.js';
 import asyncHandler from '../utils/asyncHandler.js';
 
@@ -115,6 +116,42 @@ router.put('/startups/:id/approve', asyncHandler(async (req, res) => {
     success: true,
     message: 'Startup registered profile is now APPROVED.',
     startup
+  });
+}));
+
+// @desc    Get all startups (for admin management)
+// @route   GET /api/admin/startups
+// @access  Private (Admin only)
+router.get('/startups', asyncHandler(async (req, res) => {
+  const startups = await Startup.find({}).sort({ createdAt: -1 });
+  res.status(200).json({
+    success: true,
+    count: startups.length,
+    startups
+  });
+}));
+
+// @desc    Delete a startup profile and associated data
+// @route   DELETE /api/admin/startups/:id
+// @access  Private (Admin only)
+router.delete('/startups/:id', asyncHandler(async (req, res) => {
+  const startup = await Startup.findById(req.params.id);
+  if (!startup) {
+    return res.status(404).json({ success: false, message: 'Startup company profile not found.' });
+  }
+
+  // Delete all applications submitted for opportunities under this startup
+  await Application.deleteMany({ startupId: startup._id });
+
+  // Delete all opportunities under this startup
+  await Opportunity.deleteMany({ startup_id: startup._id });
+
+  // Delete startup
+  await Startup.findByIdAndDelete(req.params.id);
+
+  res.status(200).json({
+    success: true,
+    message: 'Startup profile and all associated opportunities and applications deleted successfully.'
   });
 }));
 
